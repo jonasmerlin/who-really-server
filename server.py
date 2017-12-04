@@ -1,5 +1,5 @@
-import os
-import time
+import os, time, shutil, random, string
+import requests
 from flask import Flask, request, redirect, url_for, make_response, jsonify, abort
 from flask import render_template
 from werkzeug.utils import secure_filename
@@ -10,6 +10,9 @@ ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
 
 
 def allowed_file(filename):
@@ -26,7 +29,7 @@ def not_found(error):
 def hello():
     time.sleep(5)
     json = {
-        "upload": "/classification/portrait/upload",
+        "upload-picture": "/classification/portrait/upload",
         "url": "/classification/portrait/url"
     }
     return jsonify(json)
@@ -53,11 +56,21 @@ def classify_upload():
 
 @app.route('/classification/portrait/url', methods=['POST'])
 def classify_url():
-    time.sleep(5)
-    json = {
-        "gender": "female"
-    }
-    return jsonify(json)
+    url = request.args.get('url', '')
+    if not url:
+        return make_response(jsonify({'error': 'No URL provided.'}), 404) 
+    try:       
+        response = requests.get(url, stream=True)
+    except:
+        return make_response(jsonify({'error': 'URL not valid.'}), 404)
+    # random id: https://stackoverflow.com/a/30779367
+    filename = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(16))
+    img_path = os.path.join(app.config['UPLOAD_FOLDER'], filename + ".jpg")
+    with open(img_path, 'w+b') as out_file:
+        shutil.copyfileobj(response.raw, out_file)
+    del response
+    predictions = classify_portrait(img_path)
+    return jsonify(predictions)
 
 
 if __name__ == '__main__':
