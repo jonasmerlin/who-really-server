@@ -56,7 +56,8 @@ def classify_upload():
 
 @app.route('/classification/portrait/url', methods=['POST'])
 def classify_url():
-    url = request.args.get('url', '')
+    # url = request.args.get('url', '')
+    url = request.form.get('url')
     if not url:
         return make_response(jsonify({'error': 'No URL provided.'}), 404) 
     try:       
