@@ -88,26 +88,23 @@ def slack_classify_url():
         return 'URL not valid.'
     # random id: https://stackoverflow.com/a/30779367
     # @copy_current_request_context
-    # def slack_classify_portrait(response):
-    #     url = request.form.get('text')
-    #     response_url = request.form.get('response_url')
-    #     filename = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(16))
-    #     img_path = os.path.join(app.config['UPLOAD_FOLDER'], filename + ".jpg")
-    #     with open(img_path, 'w+b') as out_file:
-    #         shutil.copyfileobj(response.raw, out_file)
-    #     del response
-    #     predictions = classify_portrait(img_path)
-    #     response_json = {
-    #         "text": "This portrait is clearly of a {}, {} Person".format(predictions.gender, predictions.ethnicity)
-    #     }
-    #     requests.post(response_url, json=response_json)
-    # gevent.spawn(slack_classify_portrait, req_response)
+    t = threading.Thread(target=slack_classify_portrait, args=(request, req_response,))
+    t.start()
     return "Cool, now give me a second. I'll get back to you."
 
-    @after_this_request
-    def add_header(response):
-        response.headers['X-Foo'] = 'Parachute'
-        return response
+def slack_classify_portrait(request, response):
+    url = request.form.get('text')
+    response_url = request.form.get('response_url')
+    filename = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(16))
+    img_path = os.path.join(app.config['UPLOAD_FOLDER'], filename + ".jpg")
+    with open(img_path, 'w+b') as out_file:
+        shutil.copyfileobj(response.raw, out_file)
+    del response
+    predictions = classify_portrait(img_path)
+    response_json = {
+        "text": "This portrait is clearly of a {}, {} Person".format(predictions.gender, predictions.ethnicity)
+    }
+    requests.post(response_url, json=response_json)
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
