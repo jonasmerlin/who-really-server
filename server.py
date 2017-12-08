@@ -76,7 +76,8 @@ def web_classify_url():
 @app.route('/slack/classification/portrait/url', methods=['POST'])
 def slack_classify_url():
     print(request.form)
-    url = request.form.text
+    print(request.form.get('text'))
+    url = request.form.get('text')
     if not url:
         return 'No URL provided.'
     try:
