@@ -70,7 +70,7 @@ def web_classify_url():
         shutil.copyfileobj(response.raw, out_file)
     del response
     predictions = classify_portrait(img_path)
-    return jsonify(predictions)github
+    return jsonify(predictions)
 
 
 @app.route('/slack/classification/portrait/url', methods=['POST'])
