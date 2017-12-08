@@ -101,7 +101,7 @@ def slack_classify_url():
         del req_response
         predictions = classify_portrait(img_path)
         response_json = {
-            "text": "This portrait is clearly of a {}, {} Person".format(predictions.gender, predictions.ethnicity)
+            "text": "This portrait is clearly of a {}, {} Person".format(predictions["gender"], predictions["ethnicity"])
         }
         requests.post(response_url, json=response_json)
     t = threading.Thread(target=slack_classify_portrait)
