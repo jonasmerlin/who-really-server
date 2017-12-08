@@ -100,6 +100,7 @@ def slack_classify_url():
             shutil.copyfileobj(req_response.raw, out_file)
         del req_response
         predictions = classify_portrait(img_path)
+        print(predictions)
         response_json = {
             "text": "This portrait is clearly of a {}, {} Person".format(predictions["gender"], predictions["ethnicity"])
         }
