@@ -89,6 +89,8 @@ def slack_classify_url():
     return "Cool, now give me a second. I'll get back to you."
 
 def slack_classify_portrait(request):
+    url = request.form.get('text')
+    response_url = request.form.get('response_url')
     try:
         req_response = requests.get(url, stream=True)
     except:
@@ -96,8 +98,6 @@ def slack_classify_portrait(request):
             "text": "URL not valid."
         }
         requests.post(response_url, json=response_json)
-    url = request.form.get('text')
-    response_url = request.form.get('response_url')
     filename = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(16))
     img_path = os.path.join(app.config['UPLOAD_FOLDER'], filename + ".jpg")
     with open(img_path, 'w+b') as out_file:
