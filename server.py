@@ -1,10 +1,10 @@
 import os, time, shutil, random, string
 import requests
+import threading
 from flask import Flask, request, redirect, url_for, make_response, jsonify, abort
 from flask import render_template
 from werkzeug.utils import secure_filename
 from classify_portrait import classify_portrait
-import gevent
 from flask import copy_current_request_context
 
 UPLOAD_FOLDER = './portraits'
@@ -87,21 +87,21 @@ def slack_classify_url():
     except:
         return 'URL not valid.'
     # random id: https://stackoverflow.com/a/30779367
-    @copy_current_request_context
-    def slack_classify_portrait(response):
-        url = request.form.get('text')
-        response_url = request.form.get('response_url')
-        filename = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(16))
-        img_path = os.path.join(app.config['UPLOAD_FOLDER'], filename + ".jpg")
-        with open(img_path, 'w+b') as out_file:
-            shutil.copyfileobj(response.raw, out_file)
-        del response
-        predictions = classify_portrait(img_path)
-        response_json = {
-            "text": "This portrait is clearly of a {}, {} Person".format(predictions.gender, predictions.ethnicity)
-        }
-        requests.post(response_url, json=response_json)
-    gevent.spawn(slack_classify_portrait, req_response)
+    # @copy_current_request_context
+    # def slack_classify_portrait(response):
+    #     url = request.form.get('text')
+    #     response_url = request.form.get('response_url')
+    #     filename = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(16))
+    #     img_path = os.path.join(app.config['UPLOAD_FOLDER'], filename + ".jpg")
+    #     with open(img_path, 'w+b') as out_file:
+    #         shutil.copyfileobj(response.raw, out_file)
+    #     del response
+    #     predictions = classify_portrait(img_path)
+    #     response_json = {
+    #         "text": "This portrait is clearly of a {}, {} Person".format(predictions.gender, predictions.ethnicity)
+    #     }
+    #     requests.post(response_url, json=response_json)
+    # gevent.spawn(slack_classify_portrait, req_response)
     return "Cool, now give me a second. I'll get back to you."
 
     @after_this_request
