@@ -82,17 +82,20 @@ def slack_classify_url():
     url = request.form.get('text')
     if not url:
         return 'No URL provided.'
-    try:
-        req_response = requests.get(url, stream=True)
-    except:
-        return 'URL not valid.'
     # random id: https://stackoverflow.com/a/30779367
     # @copy_current_request_context
-    t = threading.Thread(target=slack_classify_portrait, args=(request, req_response,))
+    t = threading.Thread(target=slack_classify_portrait, args=(request, ))
     t.start()
     return "Cool, now give me a second. I'll get back to you."
 
 def slack_classify_portrait(request, response):
+    try:
+        req_response = requests.get(url, stream=True)
+    except:
+        response_json = {
+            "text": "URL not valid."
+        }
+        requests.post(response_url, json=response_json)
     url = request.form.get('text')
     response_url = request.form.get('response_url')
     filename = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(16))
