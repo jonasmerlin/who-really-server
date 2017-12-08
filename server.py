@@ -83,31 +83,32 @@ def slack_classify_url():
     if not url:
         return 'No URL provided.'
     # random id: https://stackoverflow.com/a/30779367
-    # @copy_current_request_context
-    t = threading.Thread(target=slack_classify_portrait, args=(request, ))
+    @copy_current_request_context
+    def slack_classify_portrait():
+        url = request.form.get('text')
+        response_url = request.form.get('response_url')
+        try:
+            req_response = requests.get(url, stream=True)
+        except:
+            response_json = {
+                "text": "URL not valid."
+            }
+            requests.post(response_url, json=response_json)
+        filename = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(16))
+        img_path = os.path.join(app.config['UPLOAD_FOLDER'], filename + ".jpg")
+        with open(img_path, 'w+b') as out_file:
+            shutil.copyfileobj(response.raw, out_file)
+        del response
+        predictions = classify_portrait(img_path)
+        response_json = {
+            "text": "This portrait is clearly of a {}, {} Person".format(predictions.gender, predictions.ethnicity)
+        }
+        requests.post(response_url, json=response_json)
+    t = threading.Thread(target=slack_classify_portrait)
     t.start()
     return "Cool, now give me a second. I'll get back to you."
 
-def slack_classify_portrait(request):
-    url = request.form.get('text')
-    response_url = request.form.get('response_url')
-    try:
-        req_response = requests.get(url, stream=True)
-    except:
-        response_json = {
-            "text": "URL not valid."
-        }
-        requests.post(response_url, json=response_json)
-    filename = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(16))
-    img_path = os.path.join(app.config['UPLOAD_FOLDER'], filename + ".jpg")
-    with open(img_path, 'w+b') as out_file:
-        shutil.copyfileobj(response.raw, out_file)
-    del response
-    predictions = classify_portrait(img_path)
-    response_json = {
-        "text": "This portrait is clearly of a {}, {} Person".format(predictions.gender, predictions.ethnicity)
-    }
-    requests.post(response_url, json=response_json)
+
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
