@@ -55,9 +55,18 @@ def classify_upload():
 
 
 @app.route('/classification/portrait/url', methods=['POST'])
-def classify_url():
-    # url = request.args.get('url', '')
+def web_classify_url():
     url = request.form.get('url')
+    return classify_url(url)
+
+
+@app.route('/slack/classification/portrait/url', methods=['POST'])
+def slack_classify_url():
+    print(request.form)
+    url = request.form.text
+    return classify_url(url)
+
+def classify_url(url):
     if not url:
         return make_response(jsonify({'error': 'No URL provided.'}), 404)
     try:
@@ -72,12 +81,6 @@ def classify_url():
     del response
     predictions = classify_portrait(img_path)
     return jsonify(predictions)
-
-@app.route('/slack/classification/portrait/url', methods=['POST'])
-def slack_classify_url():
-    print(request.form)
-    print(request.args)
-    return "Hey, I got your message and uh ... I don't want to be friends anymore. Sorry!"
 
 
 if __name__ == '__main__':
