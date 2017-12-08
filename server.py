@@ -74,7 +74,7 @@ def classify_url():
     return jsonify(predictions)
 
 @app.route('/slack/classification/portrait/url', methods=['POST'])
-def classify_url():
+def slack_classify_url():
     print(request)
     return "Hey, I got your message and uh ... I don't want to be friends anymore. Sorry!"
 
