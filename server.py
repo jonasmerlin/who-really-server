@@ -97,8 +97,8 @@ def slack_classify_url():
         filename = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(16))
         img_path = os.path.join(app.config['UPLOAD_FOLDER'], filename + ".jpg")
         with open(img_path, 'w+b') as out_file:
-            shutil.copyfileobj(response.raw, out_file)
-        del response
+            shutil.copyfileobj(req_response.raw, out_file)
+        del req_response
         predictions = classify_portrait(img_path)
         response_json = {
             "text": "This portrait is clearly of a {}, {} Person".format(predictions.gender, predictions.ethnicity)
