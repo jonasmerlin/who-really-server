@@ -81,18 +81,27 @@ def slack_classify_url():
     if not url:
         return 'No URL provided.'
     try:
-        response = requests.get(url, stream=True)
+        req_response = requests.get(url, stream=True)
     except:
         return 'URL not valid.'
     # random id: https://stackoverflow.com/a/30779367
+    slack_classify_portrait(request, req_response)
+    return "Cool, now give me a second. I'll get back to you."
+
+
+def slack_classify_portrait(request, response):
+    url = request.form.get('text')
+    response_url = request.form.get('response_url')
     filename = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(16))
     img_path = os.path.join(app.config['UPLOAD_FOLDER'], filename + ".jpg")
     with open(img_path, 'w+b') as out_file:
         shutil.copyfileobj(response.raw, out_file)
     del response
     predictions = classify_portrait(img_path)
-    return predictions
-
+    response_json = {
+        "text": "This portrait is clearly of a {}, {} Person".format(predictions.gender, predictions.ethnicity)
+    }
+    requests.post(response_url, json=response_json)
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
