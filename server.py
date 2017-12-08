@@ -88,7 +88,7 @@ def slack_classify_url():
     t.start()
     return "Cool, now give me a second. I'll get back to you."
 
-def slack_classify_portrait(request, response):
+def slack_classify_portrait(request):
     try:
         req_response = requests.get(url, stream=True)
     except:
