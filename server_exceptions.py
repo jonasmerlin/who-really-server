@@ -10,5 +10,5 @@ class URLError(Error):
         message -- explanation of what was wrong with the url
     """
 
-    def __init__(self, previous, next, message):
+    def __init__(self, message):
         self.message = message
