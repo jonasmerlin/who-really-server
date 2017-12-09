@@ -7,12 +7,21 @@ import time
 
 import git
 import requests
-from flask import Flask, request, redirect, url_for, make_response, jsonify,
-abort, render_template, copy_current_request_context
+from flask import (Flask, request, redirect, url_for, make_response, jsonify,
+                abort, render_template, copy_current_request_context)
 from werkzeug.utils import secure_filename
 
 from classify_portrait import classify_portrait
-from server-exceptions import URLError
+from server_exceptions import URLError
+
+def get_git_root(path):
+    """Returns the root of the containing git repo.
+
+    Source: https://stackoverflow.com/a/41920796
+    """
+    git_repo = git.Repo(path, search_parent_directories=True)
+    git_root = git_repo.git.rev_parse("--show-toplevel")
+    return git_root
 
 UPLOAD_FOLDER = os.path.join(get_git_root(__file__), 'portraits')
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
@@ -23,16 +32,6 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 # Create portraits folder on first run.
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
-
-
-def get_git_root(path):
-    """Returns the root of the containing git repo.
-
-    Source: https://stackoverflow.com/a/41920796
-    """
-    git_repo = git.Repo(path, search_parent_directories=True)
-    git_root = git_repo.git.rev_parse("--show-toplevel")
-    return git_root
 
 
 def allowed_file(filename):
@@ -59,6 +58,29 @@ def make_file_name(length):
 @app.errorhandler(404)
 def not_found(error):
     return make_response(jsonify({'error': 'Not found'}), 404)
+
+
+def download_img(url):
+    """Downloads an image from a url.
+
+    Returns either the path of the downloaded image or raises an URLError
+    specifying why the error was raised in its message attriute.
+    """
+    if not url:
+        raise URLError('No URL provided.')
+    file_ext = url.split(".")[-1]
+    if file_ext not in ALLOWED_EXTENSIONS:
+        raise URLError('File type is not allowed.')
+    try:
+        req_response = requests.get(url, stream=True)
+    except RequestException:
+        raise URLError('URL does not respond or is not valid.')
+    filename = make_file_name(16)
+    img_path = os.path.join(app.config['UPLOAD_FOLDER'], filename + file_ext)
+    with open(img_path, 'w+b') as out_file:
+        shutil.copyfileobj(req_response.raw, out_file)
+    del req_response
+    return img_path
 
 
 @app.route('/', methods=['GET'])
@@ -147,29 +169,6 @@ def slack_classify_url():
     t = threading.Thread(target=slack_classify_portrait)
     t.start()
     return "Cool, now give me a second. I'll get back to you."
-
-
-def download_img(url):
-    """Downloads an image from a url.
-
-    Returns either the path of the downloaded image or raises an URLError
-    specifying why the error was raised in its message attriute.
-    """
-    if not url:
-        raise URLError('No URL provided.')
-    file_ext = url.split(".")[-1]
-    if file_ext not in ALLOWED_EXTENSIONS:
-        raise URLError('File type is not allowed.')
-    try:
-        req_response = requests.get(url, stream=True)
-    except RequestException:
-        raise URLError('URL does not respond or is not valid.')
-    filename = make_file_name(16)
-    img_path = os.path.join(app.config['UPLOAD_FOLDER'], filename + file_ext)
-    with open(img_path, 'w+b') as out_file:
-        shutil.copyfileobj(req_response.raw, out_file)
-    del req_response
-    return img_path
 
 
 if __name__ == '__main__':
