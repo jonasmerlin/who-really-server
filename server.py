@@ -72,7 +72,7 @@ def download_img(url):
         raise URLError('No URL provided.')
     try:
         req_response = requests.get(url, stream=True)
-    except RequestException:
+    except Exception:
         raise URLError('URL does not respond or is not valid.')
     file_ext = url.split(".")[-1]
     if file_ext not in ALLOWED_EXTENSIONS:
