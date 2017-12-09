@@ -14,6 +14,7 @@ from werkzeug.utils import secure_filename
 from classify_portrait import classify_portrait
 from server_exceptions import URLError
 
+
 def get_git_root(path):
     """Returns the root of the containing git repo.
 
@@ -23,7 +24,10 @@ def get_git_root(path):
     git_root = git_repo.git.rev_parse("--show-toplevel")
     return git_root
 
-UPLOAD_FOLDER = os.path.join(get_git_root(os.path.abspath(__file__)), 'portraits')
+
+UPLOAD_FOLDER = os.path.join(
+        get_git_root(os.path.abspath(__file__)),
+    'portraits')
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
 
 app = Flask(__name__)
@@ -68,13 +72,13 @@ def download_img(url):
     """
     if not url:
         raise URLError('No URL provided.')
+    try:
+        req_response = requests.get(url, stream=True)
+    except:
+        raise URLError('URL does not respond or is not valid.')
     file_ext = url.split(".")[-1]
     if file_ext not in ALLOWED_EXTENSIONS:
         raise URLError('File type is not allowed.')
-    try:
-        req_response = requests.get(url, stream=True)
-    except RequestException:
-        raise URLError('URL does not respond or is not valid.')
     filename = make_file_name(16)
     img_path = os.path.join(app.config['UPLOAD_FOLDER'], filename + file_ext)
     with open(img_path, 'w+b') as out_file:
