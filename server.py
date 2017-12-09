@@ -70,13 +70,13 @@ def download_img(url):
     """
     if not url:
         raise URLError('No URL provided.')
-    file_ext = url.split(".")[-1]
-    if file_ext not in ALLOWED_EXTENSIONS:
-        raise URLError('File type is not allowed.')
     try:
         req_response = requests.get(url, stream=True)
     except RequestException:
         raise URLError('URL does not respond or is not valid.')
+    file_ext = url.split(".")[-1]
+    if file_ext not in ALLOWED_EXTENSIONS:
+        raise URLError('File type is not allowed.')
     filename = make_file_name(16)
     img_path = os.path.join(app.config['UPLOAD_FOLDER'], filename + file_ext)
     with open(img_path, 'w+b') as out_file:
