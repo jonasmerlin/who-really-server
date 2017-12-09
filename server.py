@@ -14,17 +14,6 @@ from werkzeug.utils import secure_filename
 from classify_portrait import classify_portrait
 from server_exceptions import URLError
 
-def get_git_root(path):
-    """Returns the root of the containing git repo.
-
-    Source: https://stackoverflow.com/a/41920796
-    """
-    git_repo = git.Repo(path, search_parent_directories=True)
-    git_root = git_repo.git.rev_parse("--show-toplevel")
-    print(git_root)
-    return git_root
-
-
 UPLOAD_FOLDER = './portraits'
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
 
