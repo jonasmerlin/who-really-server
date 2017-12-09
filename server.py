@@ -23,7 +23,7 @@ def get_git_root(path):
     git_root = git_repo.git.rev_parse("--show-toplevel")
     return git_root
 
-UPLOAD_FOLDER = os.path.join(get_git_root(__file__), 'portraits')
+UPLOAD_FOLDER = os.path.join(get_git_root(os.path.abspath(__file__)), 'portraits')
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
 
 app = Flask(__name__)
