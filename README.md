@@ -10,6 +10,11 @@ If you want to run the server locally, do the following:
 
 Clone the repo and checkout the `local` branch.
 
-Then run `make prepare` and then `make serve`
+Then run
+
+```sh
+make prepare
+make serve
+```
 
 The server should now run on your machine and tell you where you can reach it.
