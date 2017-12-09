@@ -12,6 +12,7 @@ abort, render_template, copy_current_request_context
 from werkzeug.utils import secure_filename
 
 from classify_portrait import classify_portrait
+from server-exceptions import URLError
 
 UPLOAD_FOLDER = os.path.join(get_git_root(__file__), 'portraits')
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
@@ -95,8 +96,7 @@ def classify_upload():
         predictions = classify_portrait(filepath)
         return jsonify(predictions)
 
-# TODO:
-#   Check file extension.
+
 @app.route('/classification/portrait/url', methods=['POST'])
 def web_classify_url():
     """Classify a the file behind a user-provided url.
@@ -107,17 +107,10 @@ def web_classify_url():
     of each classifier.
     """
     url = request.form.get('url')
-    if not url:
-        return make_response(jsonify({'error': 'No URL provided.'}), 404)
     try:
-        response = requests.get(url, stream=True)
-    except RequestError:
-        return make_response(jsonify({'error': 'URL not valid.'}), 404)
-    filename = make_file_name(16)
-    img_path = os.path.join(app.config['UPLOAD_FOLDER'], filename + ".jpg")
-    with open(img_path, 'w+b') as out_file:
-        shutil.copyfileobj(response.raw, out_file)
-    del response
+        img_path = download_img(url)
+    except URLError as e:
+        return make_response(jsonify({'error': e.message}), 404)
     predictions = classify_portrait(img_path)
     return jsonify(predictions)
 
@@ -125,9 +118,6 @@ def web_classify_url():
 @app.route('/slack/classification/portrait/url', methods=['POST'])
 def slack_classify_url():
     """URL classification route specifically for Slack slash-command."""
-    url = request.form.get('text')
-    if not url:
-        return 'No URL provided.'
 
     # Slack expects an answer in less than 3000ms
     # Since both the request for the image as well as the classification
@@ -137,21 +127,21 @@ def slack_classify_url():
     @copy_current_request_context
     def slack_classify_portrait():
         url = request.form.get('text')
-        response_url = request.form.get('response_url')
+        slack_response_url = request.form.get('response_url')
         try:
-            req_response = requests.get(url, stream=True)
-        except RequestError:
+            img_path = download_img(url)
+        except URLError as e:
             response_json = {
-                "text": "URL not valid."
+                "text": e.message
             }
-            requests.post(response_url, json=response_json)
-        download_img(url, req_response)
+            requests.post(slack_response_url, json=response_json)
         predictions = classify_portrait(img_path)
         response_json = {
             "text": "This portrait is clearly of a {}, {} Person"
             .format(predictions["gender"], predictions["ethnicity"])
         }
-        requests.post(response_url, json=response_json)
+        requests.post(slack_response_url, json=response_json)
+
     # We call the function in a separate thread, so we can let the user know
     # immidiately that we are working on his or her request.
     t = threading.Thread(target=slack_classify_portrait)
@@ -159,10 +149,23 @@ def slack_classify_url():
     return "Cool, now give me a second. I'll get back to you."
 
 
-def download_img(url, req_response):
+def download_img(url):
+    """Downloads an image from a url.
+
+    Returns either the path of the downloaded image or raises an URLError
+    specifying why the error was raised in its message attriute.
+    """
+    if not url:
+        raise URLError('No URL provided.')
     file_ext = url.split(".")[-1]
+    if file_ext not in ALLOWED_EXTENSIONS:
+        raise URLError('File type is not allowed.')
+    try:
+        req_response = requests.get(url, stream=True)
+    except RequestException:
+        raise URLError('URL does not respond or is not valid.')
     filename = make_file_name(16)
-    img_path = os.path.join(app.config['UPLOAD_FOLDER'], filename + ".jpg")
+    img_path = os.path.join(app.config['UPLOAD_FOLDER'], filename + file_ext)
     with open(img_path, 'w+b') as out_file:
         shutil.copyfileobj(req_response.raw, out_file)
     del req_response
