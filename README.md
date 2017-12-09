@@ -2,7 +2,7 @@
 
 The API server for Who Really?!
 
-The master branch is automatically deployed to Heroku under who-really.herokuapp.com
+The master branch is automatically deployed to Heroku under [who-really.herokuapp.com](who-really.herokuapp.com)
 
 ## Running locally
 
