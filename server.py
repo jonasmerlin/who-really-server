@@ -28,7 +28,7 @@ if not os.path.exists(UPLOAD_FOLDER):
 def allowed_file(filename):
     """Checks if the provided file is in one of the allowed formats."""
     return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+        filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 def make_file_name(length):
