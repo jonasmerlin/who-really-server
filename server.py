@@ -120,6 +120,7 @@ def web_classify_url():
     Returns a JSON object containing key-value pairs of the name and result
     of each classifier.
     """
+    print(request.form)
     url = request.form.get('url')
     try:
         img_path = download_img(url)
