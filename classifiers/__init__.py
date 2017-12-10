@@ -13,5 +13,5 @@ module_names = [
 # import every module using importlib
 modules = [
            importlib.import_module('classifiers.' + m + '.predict')
-           for m in module_name
+           for m in module_names
            ]
