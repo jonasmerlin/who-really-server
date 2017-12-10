@@ -10,6 +10,7 @@ import requests
 from flask import (Flask, request, redirect, url_for, make_response, jsonify,
                 abort, render_template, copy_current_request_context)
 from werkzeug.utils import secure_filename
+from flask_cors import CORS
 
 from classify_portrait import classify_portrait
 from server_exceptions import URLError
@@ -27,11 +28,12 @@ def get_git_root(path):
 
 UPLOAD_FOLDER = os.path.join(
         get_git_root(os.path.abspath(__file__)),
-    'portraits')
+        'portraits')
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+CORS(app)
 
 # Create portraits folder on first run.
 if not os.path.exists(UPLOAD_FOLDER):
