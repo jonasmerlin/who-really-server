@@ -17,13 +17,13 @@ from server_exceptions import URLError
 UPLOAD_FOLDER = './portraits'
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
 
-app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-CORS(app)
-
 # Create portraits folder on first run.
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
+
+app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+CORS(app)
 
 
 def allowed_file(filename):
@@ -69,6 +69,7 @@ def download_img(url):
         raise URLError('File type is not allowed.')
     filename = make_file_name(16)
     img_path = os.path.join(app.config['UPLOAD_FOLDER'], filename + file_ext)
+    print("Creating image: " + img_path)
     with open(img_path, 'w+b') as out_file:
         shutil.copyfileobj(req_response.raw, out_file)
     del req_response
