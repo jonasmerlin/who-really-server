@@ -5,7 +5,6 @@ import string
 import threading
 import time
 
-import git
 import requests
 from flask import (Flask, request, redirect, url_for, make_response, jsonify,
                 abort, render_template, copy_current_request_context)
