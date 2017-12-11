@@ -153,8 +153,8 @@ def slack_classify_url():
             requests.post(slack_response_url, json=response_json)
         predictions = classify_portrait(img_path)
         response_json = {
-            "text": "This portrait is clearly of a {}, {} Person"
-            .format(predictions["gender"], predictions["ethnicity"])
+            "text": "This portrait is clearly of a {}, {}, {} Person"
+            .format(predictions["gender"], predictions["ethnicity"], predictions["age"])
         }
         requests.post(slack_response_url, json=response_json)
 
